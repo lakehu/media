@@ -18,14 +18,16 @@ apply plugin: 'kotlin-android'
 
 android {
     namespace 'androidx.media3.demo.main'
+    compileSdk 34
 
-    compileSdk project.ext.compileSdkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
+    kotlinOptions {
+        jvmTarget = "17"
+    }
     defaultConfig {
         versionName project.ext.releaseVersion
         versionCode project.ext.releaseVersionCode
