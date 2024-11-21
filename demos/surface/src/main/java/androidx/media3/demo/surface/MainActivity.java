@@ -20,6 +20,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceControl;
 import android.view.SurfaceHolder;
@@ -43,6 +44,7 @@ import androidx.media3.exoplayer.drm.DrmSessionManager;
 import androidx.media3.exoplayer.drm.FrameworkMediaDrm;
 import androidx.media3.exoplayer.drm.HttpMediaDrmCallback;
 import androidx.media3.exoplayer.source.MediaSource;
+import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.ui.LegacyPlayerControlView;
 import java.util.UUID;
@@ -51,7 +53,7 @@ import java.util.UUID;
 public final class MainActivity extends Activity {
 
   private static final String DEFAULT_MEDIA_URI =
-      "http://10.0.2.2/startup_video.mp4";
+      "rtsp://10.0.2.2:8554/mystream";
   private static final String SURFACE_CONTROL_NAME = "surfacedemo";
 
   private static final String ACTION_VIEW = "androidx.media3.demo.surface.action.VIEW";
@@ -218,7 +220,11 @@ public final class MainActivity extends Activity {
           new ProgressiveMediaSource.Factory(dataSourceFactory)
               .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
               .createMediaSource(MediaItem.fromUri(uri));
-    } else {
+    } else if (type == C.CONTENT_TYPE_RTSP) {
+      Log.v("MyTagRTSP", "RTSP now  inferContentType = "+type);
+      mediaSource = new RtspMediaSource.Factory().createMediaSource(MediaItem.fromUri(uri));
+    }
+    else {
       throw new IllegalStateException();
     }
     ExoPlayer player = new ExoPlayer.Builder(getApplicationContext()).build();
