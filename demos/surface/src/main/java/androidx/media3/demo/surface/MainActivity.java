@@ -51,7 +51,7 @@ import java.util.UUID;
 public final class MainActivity extends Activity {
 
   private static final String DEFAULT_MEDIA_URI =
-      "https://storage.googleapis.com/exoplayer-test-media-1/mkv/android-screens-lavf-56.36.100-aac-avc-main-1280x720.mkv";
+      "http://10.0.2.2/startup_video.mp4";
   private static final String SURFACE_CONTROL_NAME = "surfacedemo";
 
   private static final String ACTION_VIEW = "androidx.media3.demo.surface.action.VIEW";
