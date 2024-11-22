@@ -20,7 +20,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
+
 import android.view.Surface;
 import android.view.SurfaceControl;
 import android.view.SurfaceHolder;
@@ -31,9 +31,11 @@ import android.widget.GridLayout;
 import androidx.annotation.Nullable;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.util.Assertions;
 import androidx.media3.common.util.Util;
+import androidx.media3.common.util.Log;
 import androidx.media3.datasource.DataSource;
 import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.datasource.DefaultHttpDataSource;
@@ -47,6 +49,7 @@ import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.rtsp.RtspMediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.ui.LegacyPlayerControlView;
+
 import java.util.UUID;
 
 /** Activity that demonstrates use of {@link SurfaceControl} with ExoPlayer. */
@@ -221,13 +224,54 @@ public final class MainActivity extends Activity {
               .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
               .createMediaSource(MediaItem.fromUri(uri));
     } else if (type == C.CONTENT_TYPE_RTSP) {
-      Log.v("MyTagRTSP", "RTSP now  inferContentType = "+type);
-      mediaSource = new RtspMediaSource.Factory().createMediaSource(MediaItem.fromUri(uri));
+      androidx.media3.common.util.Log.setLogLevel(Log.LOG_LEVEL_ALL);
+      androidx.media3.common.util.Log.d("MyTag", "RTSP now  inferContentType = "+type);
+	/*
+	## !!  Android emulator will use TCP/8554 for grpc by default!!!  
+	## Change to emulator -gprc 8555 to avoid conflict!!
+	D:\Develop\Android\Sdk>emulator -avd   Pixel_Tablet_API_34    -verbose   -show-kernel  -accel on -grpc   8555
+	INFO    | Android emulator version 33.1.24.0 (build_id 11237101) (CL:N/A)
+	...
+	INFO    | Using security allow list from: D:\Develop\Android\Sdk\emulator\lib\emulator_access.json
+	WARNING | *** No gRPC protection active, consider launching with the -grpc-use-jwt flag.***
+	INFO    | Started GRPC server at [::]:8555, security: Insecure, auth: none
+......................
+	*/
+      mediaSource =
+          new RtspMediaSource.Factory()
+              .setDrmSessionManagerProvider(unusedMediaItem -> drmSessionManager)
+              .setForceUseRtpTcp(true) // Ensure media transport is over TCP, in case of firewall limitation
+              .createMediaSource(MediaItem.fromUri(uri));
     }
     else {
       throw new IllegalStateException();
     }
     ExoPlayer player = new ExoPlayer.Builder(getApplicationContext()).build();
+    player.addListener(new Player.Listener() {
+      @Override
+      public void onPlayerError(PlaybackException error) {
+        Log.e("ExoPlayer", "Player error: " + error.getMessage());
+      }
+
+      @Override
+      public void onPlaybackStateChanged(int playbackState) {
+        switch (playbackState) {
+          case Player.STATE_BUFFERING:
+            Log.d("ExoPlayer", "Buffering...");
+            break;
+          case Player.STATE_READY:
+            Log.d("ExoPlayer", "Ready to play!");
+            break;
+          case Player.STATE_ENDED:
+            Log.d("ExoPlayer", "Playback ended.");
+            break;
+          case Player.STATE_IDLE:
+            Log.d("ExoPlayer", "Player idle.");
+            break;
+        }
+      }
+    });
+
     player.setMediaSource(mediaSource);
     player.prepare();
     player.play();
