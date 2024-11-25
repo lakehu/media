@@ -1,3 +1,8 @@
+# RTSP demo based on Android14 API34 
+
+Refer to [demos/surface](./demos/surface/README.md)
+
+
 # AndroidX Media
 
 AndroidX Media is a collection of libraries for implementing media use cases on
